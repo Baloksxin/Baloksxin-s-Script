@@ -1,0 +1,69 @@
+local DiscordLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/UI-Libs/main/discord%20lib.txt"))()
+
+local win = DiscordLib:Window("Baloksxin's script") -- Create window
+
+local srv = win:Server("Main", "http://www.roblox.com/asset/?id=6031075938") -- Create server
+
+local chnl = srv:Channel("Main") -- Create channel
+
+-- Get local player
+local LocalPlayer = game.Players.LocalPlayer
+
+-- Record initial speed and FOV
+local initialWalkSpeed = 16 -- Initial speed
+local initialFieldOfView = 75 -- Initial FOV
+
+-- Listen for character load event to get initial values
+LocalPlayer.CharacterAdded:Connect(function(character)
+    initialWalkSpeed = character.Humanoid.WalkSpeed
+    initialFieldOfView = workspace.CurrentCamera.FieldOfView
+end)
+
+-- Add speed input box (speed limit changed to 240)
+chnl:Textbox("Walkspeed", "Enter speed (0-240)", false, function(text)
+    pcall(function()
+        local value = tonumber(text)
+        if value and value >= 0 and value <= 240 then -- Change lower limit to 0
+            LocalPlayer.Character.Humanoid.WalkSpeed = value
+        else
+            DiscordLib:Notification("Error", "Invalid speed value! Please enter a number between 0 and 240.", "OK")
+        end
+    end)
+end)
+
+-- Add FOV input box
+chnl:Textbox("FOV", "Enter FOV (75-140)", false, function(text)
+    pcall(function()
+        local value = tonumber(text)
+        if value and value >= 75 and value <= 140 then
+            workspace.CurrentCamera.FieldOfView = value
+        else
+            DiscordLib:Notification("Error", "Invalid FOV value! Please enter a number between 75 and 140.", "OK")
+        end
+    end)
+end)
+
+-- Add reset button
+chnl:Button("Reset", function()
+    pcall(function()
+        LocalPlayer.Character.Humanoid.WalkSpeed = initialWalkSpeed
+        workspace.CurrentCamera.FieldOfView = initialFieldOfView
+    end)
+end)
+
+-- Add night vision functionality
+local isNightVisionActive = false
+local DefaultAmbient = game.Lighting.Ambient
+local DefaultFogEnd = game.Lighting.FogEnd
+
+chnl:Button("Night Vision", function()
+    if not isNightVisionActive then
+        game.Lighting.Ambient = Color3.new(1, 1, 1)
+        game.Lighting.FogEnd = 10000
+        isNightVisionActive = true
+    else
+        game.Lighting.Ambient = DefaultAmbient
+        game.Lighting.FogEnd = DefaultFogEnd
+        isNightVisionActive = false
+    end
+end)
