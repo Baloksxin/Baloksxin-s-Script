@@ -1,9 +1,14 @@
+-- Load DiscordLib library
 local DiscordLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/UI-Libs/main/discord%20lib.txt"))()
 
-local win = DiscordLib:Window("Baloksxin's script") -- Create window
+-- Create window
+local win = DiscordLib:Window("Baloksxin's script")
 
-local srv = win:Server("Main", "http://www.roblox.com/asset/?id=6031075938") -- Create server
-local chnl = srv:Channel("Main") -- Create channel
+-- Create server
+local srv = win:Server("Main", "http://www.roblox.com/asset/?id=6031075938")
+
+-- Create channel
+local chnl = srv:Channel("Main")
 
 -- Get local player
 local LocalPlayer = game.Players.LocalPlayer
@@ -71,7 +76,7 @@ chnl:Button("Night Vision", function()
     end
 end)
 
--- Add lock speed and FOV button
+-- Add button to lock speed and FOV
 chnl:Button("Lock Speed/FOV", function()
     isLocked = not isLocked
     if isLocked then
@@ -79,4 +84,11 @@ chnl:Button("Lock Speed/FOV", function()
     else
         DiscordLib:Notification("Notice", "Speed and FOV are unlocked and can be modified!", "OK")
     end
+end)
+
+-- Add button to load "Pressure Script"
+chnl:Button("Load Pressure Script", function()
+    pcall(function()
+        loadstring(game:HttpGet("https://pastebin.com/raw/haa09YfF"))()
+    end)
 end)
