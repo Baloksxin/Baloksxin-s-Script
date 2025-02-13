@@ -67,7 +67,18 @@ chnl:Textbox("视野（FOV）", "请输入视野（75-140）", false, function(t
         if value and value >= 75 and value <= 140 then
             appliedFieldOfView = value -- 更新锁定值，而不是立即修改玩家 FOV
             if not isLocked then
+                -- 尝试修改 LocalPlayer 的 FieldOfView
+                game.Players.LocalPlayer.Character:WaitForChild("HumanoidRootPart")
                 workspace.CurrentCamera.FieldOfView = value
+                -- 在某些情况下强制更新 FOV
+                local camera = workspace.CurrentCamera
+                local startFov = camera.FieldOfView
+                local targetFov = value
+                local step = (targetFov - startFov) / 10  -- 增量调整
+                for i = 1, 10 do
+                    camera.FieldOfView = startFov + step * i
+                    wait(0.1)
+                end
             end
         else
             DiscordLib:Notification("错误", "视野值无效，请输入 75 到 140 之间的数字！", "确定")
