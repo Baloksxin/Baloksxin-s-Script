@@ -1,13 +1,14 @@
 -- 加载 DiscordLib 库
 local DiscordLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/UI-Libs/main/discord%20lib.txt"))()
+
 -- 创建窗口
-local win = DiscordLib:Window("Baloksxin's script")
+local win = DiscordLib:Window("Baloksxin's Script")
 
 -- 创建服务器
-local srv = win:Server("Main", "http://www.roblox.com/asset/?id=6031075938")
+local srv = win:Server("主服务器", "http://www.roblox.com/asset/?id=6031075938")
 
 -- 创建频道
-local chnl = srv:Channel("Main")
+local chnl = srv:Channel("主频道")
 
 -- 获取本地玩家
 local LocalPlayer = game.Players.LocalPlayer
@@ -37,10 +38,13 @@ game:GetService("RunService").RenderStepped:Connect(function()
         -- 强制重置 FOV
         workspace.CurrentCamera.FieldOfView = appliedFieldOfView
     end
+    if not isLocked then
+        workspace.CurrentCamera.FieldOfView = appliedFieldOfView
+    end
 end)
 
 -- 添加速度输入框（速度上限改为 240）
-chnl:Textbox("Walkspeed", "请输入速度（0-240）", false, function(text)
+chnl:Textbox("速度", "请输入速度（0-240）", false, function(text)
     pcall(function()
         if isLocked then return end -- 如果锁定，不执行修改
         local value = tonumber(text)
@@ -56,7 +60,7 @@ chnl:Textbox("Walkspeed", "请输入速度（0-240）", false, function(text)
 end)
 
 -- 添加 FOV 输入框
-chnl:Textbox("FOV", "请输入 FOV（75-140）", false, function(text)
+chnl:Textbox("视野（FOV）", "请输入视野（75-140）", false, function(text)
     pcall(function()
         if isLocked then return end -- 如果锁定，不执行修改
         local value = tonumber(text)
@@ -66,7 +70,7 @@ chnl:Textbox("FOV", "请输入 FOV（75-140）", false, function(text)
                 workspace.CurrentCamera.FieldOfView = value
             end
         else
-            DiscordLib:Notification("错误", "FOV 值无效，请输入 75 到 140 之间的数字！", "确定")
+            DiscordLib:Notification("错误", "视野值无效，请输入 75 到 140 之间的数字！", "确定")
         end
     end)
 end)
@@ -87,7 +91,7 @@ end)
 local DefaultAmbient = game.Lighting.Ambient
 local DefaultFogEnd = game.Lighting.FogEnd
 
-chnl:Button("Night Vision", function()
+chnl:Button("夜视模式", function()
     local isNightVisionActive = not game.Lighting.Ambient == Color3.new(1, 1, 1)
     if not isNightVisionActive then
         game.Lighting.Ambient = Color3.new(1, 1, 1)
@@ -99,18 +103,56 @@ chnl:Button("Night Vision", function()
 end)
 
 -- 添加锁定速度/FOV 按钮
-chnl:Button("锁定速度/FOV", function()
+chnl:Button("锁定速度/视野", function()
     isLocked = not isLocked
     if isLocked then
-        DiscordLib:Notification("提示", "速度和 FOV 已锁定，无法修改！", "确定")
+        DiscordLib:Notification("提示", "速度和视野已锁定，无法修改！", "确定")
     else
-        DiscordLib:Notification("提示", "速度和 FOV 已解锁，可以修改！", "确定")
+        DiscordLib:Notification("提示", "速度和视野已解锁，可以修改！", "确定")
     end
 end)
 
 -- 添加按钮加载“压力脚本”
-chnl:Button("载入压力ESP脚本", function()
+chnl:Button("加载压力ESP脚本", function()
     pcall(function()
         loadstring(game:HttpGet("https://pastebin.com/raw/haa09YfF"))()
     end)
+end)
+
+-- 添加 FOV 平滑调整功能
+local targetFieldOfView = initialFieldOfView
+
+chnl:Button("平滑调整视野", function()
+    local start = workspace.CurrentCamera.FieldOfView
+    local finish = targetFieldOfView
+    local duration = 2 -- 调整时间（秒）
+    local startTime = os.clock()
+    while os.clock() - startTime < duration do
+        local progress = (os.clock() - startTime) / duration
+        local current = start + (finish - start) * progress
+        workspace.CurrentCamera.FieldOfView = current
+        wait()
+    end
+    workspace.CurrentCamera.FieldOfView = finish
+end)
+
+-- 添加 FOV 上限突破
+chnl:Button("突破视野上限", function()
+    local function setFOV()
+        local camera = workspace.CurrentCamera
+        if camera then
+            camera.FieldOfView = math.clamp(appliedFieldOfView, 75, 140)
+        end
+    end
+
+    -- 使用 RenderStepped 持续更新 FOV
+    game:GetService("RunService").RenderStepped:Connect(function()
+        setFOV()
+    end)
+end)
+
+-- 添加 FOV 重置机制
+chnl:Button("重置视野", function()
+    appliedFieldOfView = initialFieldOfView
+    workspace.CurrentCamera.FieldOfView = initialFieldOfView
 end)
