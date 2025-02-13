@@ -1,19 +1,19 @@
--- Load the DiscordLib library
+-- Load DiscordLib library
 local DiscordLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/UI-Libs/main/discord%20lib.txt"))()
 
--- Create the window
+-- Create window
 local win = DiscordLib:Window("Baloksxin's Script")
 
--- Create the server
+-- Create server
 local srv = win:Server("Main Server", "http://www.roblox.com/asset/?id=6031075938")
 
--- Create the channel
+-- Create channel
 local chnl = srv:Channel("Main Channel")
 
--- Get the local player
+-- Get local player
 local LocalPlayer = game.Players.LocalPlayer
 
--- Record the initial walk speed and FOV
+-- Record initial walk speed and FOV
 local initialWalkSpeed = 16 -- Initial walk speed
 local initialFieldOfView = 75 -- Initial FOV
 LocalPlayer.CharacterAdded:Connect(function(character)
@@ -21,21 +21,21 @@ LocalPlayer.CharacterAdded:Connect(function(character)
     initialFieldOfView = workspace.CurrentCamera.FieldOfView
 end)
 
--- Add lock functionality
+-- Add lock feature
 local isLocked = false
 
--- Apply the locked values
+-- Apply locked values
 local appliedWalkSpeed = initialWalkSpeed
 local appliedFieldOfView = initialFieldOfView
 
 -- Use RenderStepped to continuously monitor and reset speed and FOV
 game:GetService("RunService").RenderStepped:Connect(function()
     if isLocked then
-        -- Force reset the speed
+        -- Force reset speed
         if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
             LocalPlayer.Character.Humanoid.WalkSpeed = appliedWalkSpeed
         end
-        -- Force reset the FOV
+        -- Force reset FOV
         workspace.CurrentCamera.FieldOfView = appliedFieldOfView
     end
     if not isLocked then
@@ -43,34 +43,34 @@ game:GetService("RunService").RenderStepped:Connect(function()
     end
 end)
 
--- Add a speed input box (Speed limit changed to 240)
+-- Add speed input box (speed limit changed to 240)
 chnl:Textbox("Speed", "Enter speed (0-240)", false, function(text)
     pcall(function()
-        if isLocked then return end -- Do not execute if locked
+        if isLocked then return end -- Do not execute modification if locked
         local value = tonumber(text)
         if value and value >= 0 and value <= 240 then
-            appliedWalkSpeed = value -- Update the locked value, rather than modifying the player's speed immediately
+            appliedWalkSpeed = value -- Update the locked value, not immediately change player speed
             if not isLocked then
                 LocalPlayer.Character.Humanoid.WalkSpeed = value
             end
         else
-            DiscordLib:Notification("Error", "Invalid speed value, please enter a number between 0 and 240!", "OK")
+            DiscordLib:Notification("Error", "Invalid speed value. Please enter a number between 0 and 240!", "OK")
         end
     end)
 end)
 
--- Add an FOV input box
+-- Add FOV input box
 chnl:Textbox("Field of View (FOV)", "Enter FOV (75-140)", false, function(text)
     pcall(function()
-        if isLocked then return end -- Do not execute if locked
+        if isLocked then return end -- Do not execute modification if locked
         local value = tonumber(text)
         if value and value >= 75 and value <= 140 then
-            appliedFieldOfView = value -- Update the locked value, rather than modifying the player's FOV immediately
+            appliedFieldOfView = value -- Update the locked value, not immediately change player FOV
             if not isLocked then
                 -- Attempt to modify LocalPlayer's FieldOfView
                 game.Players.LocalPlayer.Character:WaitForChild("HumanoidRootPart")
                 workspace.CurrentCamera.FieldOfView = value
-                -- In some cases, force update the FOV
+                -- Force update FOV in some cases
                 local camera = workspace.CurrentCamera
                 local startFov = camera.FieldOfView
                 local targetFov = value
@@ -81,7 +81,7 @@ chnl:Textbox("Field of View (FOV)", "Enter FOV (75-140)", false, function(text)
                 end
             end
         else
-            DiscordLib:Notification("Error", "Invalid FOV value, please enter a number between 75 and 140!", "OK")
+            DiscordLib:Notification("Error", "Invalid FOV value. Please enter a number between 75 and 140!", "OK")
         end
     end)
 end)
@@ -98,18 +98,20 @@ chnl:Button("Reset", function()
     end)
 end)
 
--- Add night vision functionality
+-- Add night vision feature
 local DefaultAmbient = game.Lighting.Ambient
 local DefaultFogEnd = game.Lighting.FogEnd
+local nightVisionEnabled = false -- Track night vision state
 
 chnl:Button("Night Vision Mode", function()
-    local isNightVisionActive = not game.Lighting.Ambient == Color3.new(1, 1, 1)
-    if not isNightVisionActive then
+    if not nightVisionEnabled then
         game.Lighting.Ambient = Color3.new(1, 1, 1)
         game.Lighting.FogEnd = 10000
+        nightVisionEnabled = true
     else
         game.Lighting.Ambient = DefaultAmbient
         game.Lighting.FogEnd = DefaultFogEnd
+        nightVisionEnabled = false
     end
 end)
 
@@ -117,20 +119,20 @@ end)
 chnl:Button("Lock Speed/FOV", function()
     isLocked = not isLocked
     if isLocked then
-        DiscordLib:Notification("Notice", "Speed and FOV are locked, cannot be modified!", "OK")
+        DiscordLib:Notification("Info", "Speed and FOV are now locked and cannot be modified!", "OK")
     else
-        DiscordLib:Notification("Notice", "Speed and FOV are unlocked, you can modify them!", "OK")
+        DiscordLib:Notification("Info", "Speed and FOV are unlocked and can be modified!", "OK")
     end
 end)
 
--- Add a button to load the "Pressure ESP script"
-chnl:Button("Load Pressure ESP Script", function()
+-- Add button to load "ESP script"
+chnl:Button("Load ESP Script", function()
     pcall(function()
         loadstring(game:HttpGet("https://pastebin.com/raw/haa09YfF"))()
     end)
 end)
 
--- Add smooth FOV adjustment functionality
+-- Add smooth FOV adjustment feature
 local targetFieldOfView = initialFieldOfView
 
 chnl:Button("Smooth Adjust FOV", function()
