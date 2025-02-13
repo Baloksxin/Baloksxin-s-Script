@@ -101,15 +101,17 @@ end)
 -- 添加夜视功能
 local DefaultAmbient = game.Lighting.Ambient
 local DefaultFogEnd = game.Lighting.FogEnd
+local nightVisionEnabled = false -- 跟踪夜视状态
 
 chnl:Button("夜视模式", function()
-    local isNightVisionActive = not game.Lighting.Ambient == Color3.new(1, 1, 1)
-    if not isNightVisionActive then
+    if not nightVisionEnabled then
         game.Lighting.Ambient = Color3.new(1, 1, 1)
         game.Lighting.FogEnd = 10000
+        nightVisionEnabled = true
     else
         game.Lighting.Ambient = DefaultAmbient
         game.Lighting.FogEnd = DefaultFogEnd
+        nightVisionEnabled = false
     end
 end)
 
