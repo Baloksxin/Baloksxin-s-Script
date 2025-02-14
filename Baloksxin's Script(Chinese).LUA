@@ -103,15 +103,22 @@ local DefaultAmbient = game.Lighting.Ambient
 local DefaultFogEnd = game.Lighting.FogEnd
 local nightVisionEnabled = false -- 跟踪夜视状态
 
-chnl:Button("夜视模式", function()
-    if not nightVisionEnabled then
+-- 持续应用夜视模式
+game:GetService("RunService").RenderStepped:Connect(function()
+    if nightVisionEnabled then
         game.Lighting.Ambient = Color3.new(1, 1, 1)
         game.Lighting.FogEnd = 10000
+    end
+end)
+
+-- 切换夜视模式
+chnl:Button("夜视模式", function()
+    if not nightVisionEnabled then
         nightVisionEnabled = true
     else
+        nightVisionEnabled = false
         game.Lighting.Ambient = DefaultAmbient
         game.Lighting.FogEnd = DefaultFogEnd
-        nightVisionEnabled = false
     end
 end)
 
