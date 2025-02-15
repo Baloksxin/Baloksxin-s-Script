@@ -1,3 +1,3 @@
 Baloksxin's Script's GUI library is not mine.
 I'll update the scripting feature slowly.
-Please don't try to enable the modifier speed in DOORS, as I haven't bypassed the anti-cheat.
+If you don't want to change the speed in DOORS to be pulled back, then set the speed below 20.
