@@ -1,13 +1,13 @@
--- Load DiscordLib library
+-- Load the DiscordLib library
 local DiscordLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/UI-Libs/main/discord%20lib.txt"))()
 
--- Create window
+-- Create a window
 local win = DiscordLib:Window("Baloksxin's Script")
 
--- Create server
+-- Create a server
 local srv = win:Server("Main Server", "http://www.roblox.com/asset/?id=6031075938")
 
--- Create channel
+-- Create a channel
 local chnl = srv:Channel("Main Channel")
 
 -- Get local player
@@ -28,7 +28,7 @@ local isLocked = false
 local appliedWalkSpeed = initialWalkSpeed
 local appliedFieldOfView = initialFieldOfView
 
--- Use RenderStepped to continuously monitor and reset speed and FOV
+-- Use RenderStepped to constantly monitor and reset speed and FOV
 game:GetService("RunService").RenderStepped:Connect(function()
     if isLocked then
         -- Force reset speed
@@ -43,13 +43,13 @@ game:GetService("RunService").RenderStepped:Connect(function()
     end
 end)
 
--- Add speed input box (speed limit changed to 240)
+-- Add speed input box (speed limit set to 240)
 chnl:Textbox("Speed", "Enter speed (0-240)", false, function(text)
     pcall(function()
-        if isLocked then return end -- Do not execute modification if locked
+        if isLocked then return end -- Don't execute if locked
         local value = tonumber(text)
         if value and value >= 0 and value <= 240 then
-            appliedWalkSpeed = value -- Update the locked value, not immediately change player speed
+            appliedWalkSpeed = value -- Update locked value, not immediately modify player speed
             if not isLocked then
                 LocalPlayer.Character.Humanoid.WalkSpeed = value
             end
@@ -62,19 +62,19 @@ end)
 -- Add FOV input box
 chnl:Textbox("Field of View (FOV)", "Enter FOV (75-140)", false, function(text)
     pcall(function()
-        if isLocked then return end -- Do not execute modification if locked
+        if isLocked then return end -- Don't execute if locked
         local value = tonumber(text)
         if value and value >= 75 and value <= 140 then
-            appliedFieldOfView = value -- Update the locked value, not immediately change player FOV
+            appliedFieldOfView = value -- Update locked value, not immediately modify player FOV
             if not isLocked then
-                -- Attempt to modify LocalPlayer's FieldOfView
+                -- Try to modify LocalPlayer's FieldOfView
                 game.Players.LocalPlayer.Character:WaitForChild("HumanoidRootPart")
                 workspace.CurrentCamera.FieldOfView = value
                 -- Force update FOV in some cases
                 local camera = workspace.CurrentCamera
                 local startFov = camera.FieldOfView
                 local targetFov = value
-                local step = (targetFov - startFov) / 10  -- Incremental adjustment
+                local step = (targetFov - startFov) / 10  -- Increment adjustment
                 for i = 1, 10 do
                     camera.FieldOfView = startFov + step * i
                     wait(0.1)
@@ -101,17 +101,24 @@ end)
 -- Add night vision feature
 local DefaultAmbient = game.Lighting.Ambient
 local DefaultFogEnd = game.Lighting.FogEnd
-local nightVisionEnabled = false -- Track night vision state
+local nightVisionEnabled = false -- Track night vision status
 
-chnl:Button("Night Vision Mode", function()
-    if not nightVisionEnabled then
+-- Continuously apply night vision mode
+game:GetService("RunService").RenderStepped:Connect(function()
+    if nightVisionEnabled then
         game.Lighting.Ambient = Color3.new(1, 1, 1)
         game.Lighting.FogEnd = 10000
+    end
+end)
+
+-- Toggle night vision mode
+chnl:Button("Night Vision", function()
+    if not nightVisionEnabled then
         nightVisionEnabled = true
     else
+        nightVisionEnabled = false
         game.Lighting.Ambient = DefaultAmbient
         game.Lighting.FogEnd = DefaultFogEnd
-        nightVisionEnabled = false
     end
 end)
 
@@ -119,26 +126,26 @@ end)
 chnl:Button("Lock Speed/FOV", function()
     isLocked = not isLocked
     if isLocked then
-        DiscordLib:Notification("Info", "Speed and FOV are now locked and cannot be modified!", "OK")
+        DiscordLib:Notification("Notice", "Speed and FOV are locked and cannot be modified!", "OK")
     else
-        DiscordLib:Notification("Info", "Speed and FOV are unlocked and can be modified!", "OK")
+        DiscordLib:Notification("Notice", "Speed and FOV are unlocked and can be modified!", "OK")
     end
 end)
 
--- Add button to load "ESP script"
-chnl:Button("Load ESP Script", function()
+-- Add button to load "Pressure ESP Script"
+chnl:Button("Load Pressure ESP Script", function()
     pcall(function()
         loadstring(game:HttpGet("https://pastebin.com/raw/haa09YfF"))()
     end)
 end)
 
--- Add smooth FOV adjustment feature
+-- Add FOV smooth adjustment feature
 local targetFieldOfView = initialFieldOfView
 
-chnl:Button("Smooth Adjust FOV", function()
+chnl:Button("Smoothly Adjust FOV", function()
     local start = workspace.CurrentCamera.FieldOfView
     local finish = targetFieldOfView
-    local duration = 2 -- Adjustment time (seconds)
+    local duration = 2 -- Adjust time (seconds)
     local startTime = os.clock()
     while os.clock() - startTime < duration do
         local progress = (os.clock() - startTime) / duration
