@@ -7,8 +7,11 @@ local win = DiscordLib:Window("Baloksxin's Script")
 -- 创建服务器
 local srv = win:Server("主服务器", "http://www.roblox.com/asset/?id=6031075938")
 
--- 创建频道
+-- 创建主频道
 local chnl = srv:Channel("主频道")
+
+-- 创建压力频道
+local pressureChannel = srv:Channel("压力")
 
 -- 获取本地玩家
 local LocalPlayer = game.Players.LocalPlayer
@@ -132,8 +135,8 @@ chnl:Button("锁定速度/视野", function()
     end
 end)
 
--- 添加按钮加载“压力脚本”
-chnl:Button("加载压力ESP脚本", function()
+-- 将“加载压力ESP脚本”按钮移到“压力”频道
+pressureChannel:Button("加载压力ESP脚本", function()
     pcall(function()
         loadstring(game:HttpGet("https://pastebin.com/raw/haa09YfF"))()
     end)
