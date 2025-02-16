@@ -13,6 +13,9 @@ local chnl = srv:Channel("主频道")
 -- 创建压力频道
 local pressureChannel = srv:Channel("压力")
 
+-- 创建DOORS频道
+local doorsChannel = srv:Channel("DOORS")
+
 -- 获取本地玩家
 local LocalPlayer = game.Players.LocalPlayer
 
@@ -178,4 +181,11 @@ end)
 chnl:Button("重置视野", function()
     appliedFieldOfView = initialFieldOfView
     workspace.CurrentCamera.FieldOfView = initialFieldOfView
+end)
+
+-- 添加 SENSATION 按钮到 DOORS 频道
+doorsChannel:Button("Sensation", function()
+    pcall(function()
+        loadstring(game:HttpGet("https://api.luarmor.net/files/v3/loaders/730854e5b6499ee91deb1080e8e12ae3.lua"))()
+    end)
 end)
