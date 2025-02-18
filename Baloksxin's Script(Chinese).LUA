@@ -34,7 +34,7 @@ local isLocked = false
 local appliedWalkSpeed = initialWalkSpeed
 local appliedFieldOfView = initialFieldOfView
 
--- 使用 RenderStepped 持续监听并重置速度和 FOV
+-- 持续监听并强制重置速度和 FOV
 game:GetService("RunService").RenderStepped:Connect(function()
     if isLocked then
         -- 强制重置速度
@@ -187,5 +187,16 @@ end)
 doorsChannel:Button("Sensation", function()
     pcall(function()
         loadstring(game:HttpGet("https://api.luarmor.net/files/v3/loaders/730854e5b6499ee91deb1080e8e12ae3.lua"))()
+    end)
+end)
+
+-- 监听玩家加入并应用速度设置
+game.Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function(character)
+        if character:FindFirstChildOfClass("Humanoid") then
+            -- 在玩家加入时应用速度设置
+            character.Humanoid.WalkSpeed = appliedWalkSpeed
+            workspace.CurrentCamera.FieldOfView = appliedFieldOfView
+        end
     end)
 end)
