@@ -1,4 +1,4 @@
--- Load the DiscordLib library
+-- Load DiscordLib library
 local DiscordLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/UI-Libs/main/discord%20lib.txt"))()
 
 -- Create window
@@ -19,7 +19,7 @@ local doorsChannel = srv:Channel("DOORS")
 -- Get local player
 local LocalPlayer = game.Players.LocalPlayer
 
--- Store initial walk speed and FOV
+-- Record initial walk speed and FOV
 local initialWalkSpeed = 16 -- Initial walk speed
 local initialFieldOfView = 75 -- Initial FOV
 LocalPlayer.CharacterAdded:Connect(function(character)
@@ -27,14 +27,14 @@ LocalPlayer.CharacterAdded:Connect(function(character)
     initialFieldOfView = workspace.CurrentCamera.FieldOfView
 end)
 
--- Add lock functionality
+-- Add lock feature
 local isLocked = false
 
 -- Apply locked values
 local appliedWalkSpeed = initialWalkSpeed
 local appliedFieldOfView = initialFieldOfView
 
--- Use RenderStepped to continuously monitor and reset speed and FOV
+-- Continuously listen and force reset walk speed and FOV
 game:GetService("RunService").RenderStepped:Connect(function()
     if isLocked then
         -- Force reset speed
@@ -49,18 +49,18 @@ game:GetService("RunService").RenderStepped:Connect(function()
     end
 end)
 
--- Add speed input box (speed limit changed to 240)
+-- Add speed input box (speed limit set to 240)
 chnl:Textbox("Speed", "Enter speed (0-240)", false, function(text)
     pcall(function()
-        if isLocked then return end -- Do not execute modification if locked
+        if isLocked then return end -- If locked, don't execute modification
         local value = tonumber(text)
         if value and value >= 0 and value <= 240 then
-            appliedWalkSpeed = value -- Update locked value instead of immediately modifying player speed
+            appliedWalkSpeed = value -- Update locked value, not immediately modify player speed
             if not isLocked then
                 LocalPlayer.Character.Humanoid.WalkSpeed = value
             end
         else
-            DiscordLib:Notification("Error", "Invalid speed value. Please enter a number between 0 and 240!", "OK")
+            DiscordLib:Notification("Error", "Invalid speed value, please enter a number between 0 and 240!", "OK")
         end
     end)
 end)
@@ -68,12 +68,12 @@ end)
 -- Add FOV input box
 chnl:Textbox("Field of View (FOV)", "Enter FOV (75-140)", false, function(text)
     pcall(function()
-        if isLocked then return end -- Do not execute modification if locked
+        if isLocked then return end -- If locked, don't execute modification
         local value = tonumber(text)
         if value and value >= 75 and value <= 140 then
-            appliedFieldOfView = value -- Update locked value instead of immediately modifying player FOV
+            appliedFieldOfView = value -- Update locked value, not immediately modify player FOV
             if not isLocked then
-                -- Try modifying LocalPlayer's FieldOfView
+                -- Attempt to modify LocalPlayer's FieldOfView
                 game.Players.LocalPlayer.Character:WaitForChild("HumanoidRootPart")
                 workspace.CurrentCamera.FieldOfView = value
                 -- Force update FOV in some cases
@@ -87,7 +87,7 @@ chnl:Textbox("Field of View (FOV)", "Enter FOV (75-140)", false, function(text)
                 end
             end
         else
-            DiscordLib:Notification("Error", "Invalid FOV value. Please enter a number between 75 and 140!", "OK")
+            DiscordLib:Notification("Error", "Invalid FOV value, please enter a number between 75 and 140!", "OK")
         end
     end)
 end)
@@ -107,7 +107,7 @@ end)
 -- Add night vision feature
 local DefaultAmbient = game.Lighting.Ambient
 local DefaultFogEnd = game.Lighting.FogEnd
-local nightVisionEnabled = false -- Track night vision status
+local nightVisionEnabled = false -- Track night vision state
 
 -- Continuously apply night vision mode
 game:GetService("RunService").RenderStepped:Connect(function()
@@ -118,7 +118,7 @@ game:GetService("RunService").RenderStepped:Connect(function()
 end)
 
 -- Toggle night vision mode
-chnl:Button("Night Vision", function()
+chnl:Button("Night Vision Mode", function()
     if not nightVisionEnabled then
         nightVisionEnabled = true
     else
@@ -132,9 +132,9 @@ end)
 chnl:Button("Lock Speed/FOV", function()
     isLocked = not isLocked
     if isLocked then
-        DiscordLib:Notification("Notice", "Speed and FOV are now locked and cannot be modified!", "OK")
+        DiscordLib:Notification("Notice", "Speed and FOV are locked and cannot be modified!", "OK")
     else
-        DiscordLib:Notification("Notice", "Speed and FOV are now unlocked and can be modified!", "OK")
+        DiscordLib:Notification("Notice", "Speed and FOV are unlocked and can be modified!", "OK")
     end
 end)
 
@@ -162,8 +162,8 @@ chnl:Button("Smooth Adjust FOV", function()
     workspace.CurrentCamera.FieldOfView = finish
 end)
 
--- Add FOV limit bypass
-chnl:Button("Bypass FOV Limit", function()
+-- Add FOV cap bypass
+chnl:Button("Bypass FOV Cap", function()
     local function setFOV()
         local camera = workspace.CurrentCamera
         if camera then
@@ -177,7 +177,7 @@ chnl:Button("Bypass FOV Limit", function()
     end)
 end)
 
--- Add FOV reset mechanism
+-- Add FOV reset button
 chnl:Button("Reset FOV", function()
     appliedFieldOfView = initialFieldOfView
     workspace.CurrentCamera.FieldOfView = initialFieldOfView
@@ -187,5 +187,16 @@ end)
 doorsChannel:Button("Sensation", function()
     pcall(function()
         loadstring(game:HttpGet("https://api.luarmor.net/files/v3/loaders/730854e5b6499ee91deb1080e8e12ae3.lua"))()
+    end)
+end)
+
+-- Listen for player join and apply speed settings
+game.Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function(character)
+        if character:FindFirstChildOfClass("Humanoid") then
+            -- Apply speed settings when a player joins
+            character.Humanoid.WalkSpeed = appliedWalkSpeed
+            workspace.CurrentCamera.FieldOfView = appliedFieldOfView
+        end
     end)
 end)
