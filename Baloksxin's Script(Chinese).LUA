@@ -20,79 +20,74 @@ local doorsChannel = srv:Channel("DOORS")
 local LocalPlayer = game.Players.LocalPlayer
 
 -- 记录初始速度和 FOV
-local initialWalkSpeed = 16 -- 初始速度
-local initialFieldOfView = 75 -- 初始 FOV
+local initialWalkSpeed = 16
+local initialFieldOfView = 75
 LocalPlayer.CharacterAdded:Connect(function(character)
     initialWalkSpeed = character.Humanoid.WalkSpeed
     initialFieldOfView = workspace.CurrentCamera.FieldOfView
 end)
 
--- 添加锁定功能
+-- 变量存储状态
 local isLocked = false
-
--- 应用锁定的值
 local appliedWalkSpeed = initialWalkSpeed
 local appliedFieldOfView = initialFieldOfView
+local noclipEnabled = false
+local nightVisionEnabled = false
 
--- 持续监听并强制重置速度和 FOV
+-- 监听帧渲染，持续应用设置
 game:GetService("RunService").RenderStepped:Connect(function()
     if isLocked then
-        -- 强制重置速度
         if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
             LocalPlayer.Character.Humanoid.WalkSpeed = appliedWalkSpeed
         end
-        -- 强制重置 FOV
         workspace.CurrentCamera.FieldOfView = appliedFieldOfView
     end
-    if not isLocked then
-        workspace.CurrentCamera.FieldOfView = appliedFieldOfView
+
+    -- 应用夜视
+    if nightVisionEnabled then
+        game.Lighting.Ambient = Color3.new(1, 1, 1)
+        game.Lighting.FogEnd = 10000
+    end
+
+    -- 应用穿墙
+    if noclipEnabled and LocalPlayer.Character then
+        for _, v in pairs(LocalPlayer.Character:GetDescendants()) do
+            if v:IsA("BasePart") and v.CanCollide then
+                v.CanCollide = false
+            end
+        end
     end
 end)
 
--- 添加速度输入框（速度上限改为 240）
+-- 速度设置
 chnl:Textbox("速度", "请输入速度（0-240）", false, function(text)
     pcall(function()
-        if isLocked then return end -- 如果锁定，不执行修改
+        if isLocked then return end
         local value = tonumber(text)
         if value and value >= 0 and value <= 240 then
-            appliedWalkSpeed = value -- 更新锁定值，而不是立即修改玩家速度
-            if not isLocked then
-                LocalPlayer.Character.Humanoid.WalkSpeed = value
-            end
+            appliedWalkSpeed = value
+            LocalPlayer.Character.Humanoid.WalkSpeed = value
         else
             DiscordLib:Notification("错误", "速度值无效，请输入 0 到 240 之间的数字！", "确定")
         end
     end)
 end)
 
--- 添加 FOV 输入框
+-- 视野（FOV）设置
 chnl:Textbox("视野（FOV）", "请输入视野（75-140）", false, function(text)
     pcall(function()
-        if isLocked then return end -- 如果锁定，不执行修改
+        if isLocked then return end
         local value = tonumber(text)
         if value and value >= 75 and value <= 140 then
-            appliedFieldOfView = value -- 更新锁定值，而不是立即修改玩家 FOV
-            if not isLocked then
-                -- 尝试修改 LocalPlayer 的 FieldOfView
-                game.Players.LocalPlayer.Character:WaitForChild("HumanoidRootPart")
-                workspace.CurrentCamera.FieldOfView = value
-                -- 在某些情况下强制更新 FOV
-                local camera = workspace.CurrentCamera
-                local startFov = camera.FieldOfView
-                local targetFov = value
-                local step = (targetFov - startFov) / 10  -- 增量调整
-                for i = 1, 10 do
-                    camera.FieldOfView = startFov + step * i
-                    wait(0.1)
-                end
-            end
+            appliedFieldOfView = value
+            workspace.CurrentCamera.FieldOfView = value
         else
             DiscordLib:Notification("错误", "视野值无效，请输入 75 到 140 之间的数字！", "确定")
         end
     end)
 end)
 
--- 添加重置按钮
+-- 重置按钮
 chnl:Button("重置", function()
     pcall(function()
         appliedWalkSpeed = initialWalkSpeed
@@ -104,31 +99,16 @@ chnl:Button("重置", function()
     end)
 end)
 
--- 添加夜视功能
-local DefaultAmbient = game.Lighting.Ambient
-local DefaultFogEnd = game.Lighting.FogEnd
-local nightVisionEnabled = false -- 跟踪夜视状态
-
--- 持续应用夜视模式
-game:GetService("RunService").RenderStepped:Connect(function()
-    if nightVisionEnabled then
-        game.Lighting.Ambient = Color3.new(1, 1, 1)
-        game.Lighting.FogEnd = 10000
-    end
-end)
-
--- 切换夜视模式
+-- 夜视模式
 chnl:Button("夜视模式", function()
+    nightVisionEnabled = not nightVisionEnabled
     if not nightVisionEnabled then
-        nightVisionEnabled = true
-    else
-        nightVisionEnabled = false
-        game.Lighting.Ambient = DefaultAmbient
-        game.Lighting.FogEnd = DefaultFogEnd
+        game.Lighting.Ambient = Color3.new(0.5, 0.5, 0.5) -- 恢复默认环境光
+        game.Lighting.FogEnd = 1000 -- 恢复默认雾效
     end
 end)
 
--- 添加锁定速度/FOV 按钮
+-- 锁定速度/FOV
 chnl:Button("锁定速度/视野", function()
     isLocked = not isLocked
     if isLocked then
@@ -138,65 +118,63 @@ chnl:Button("锁定速度/视野", function()
     end
 end)
 
--- 将“加载压力ESP脚本”按钮移到“压力”频道
+-- 压力ESP脚本
 pressureChannel:Button("加载压力ESP脚本", function()
     pcall(function()
         loadstring(game:HttpGet("https://pastebin.com/raw/haa09YfF"))()
     end)
 end)
 
--- 添加 FOV 平滑调整功能
-local targetFieldOfView = initialFieldOfView
-
+-- 平滑调整视野
 chnl:Button("平滑调整视野", function()
     local start = workspace.CurrentCamera.FieldOfView
-    local finish = targetFieldOfView
-    local duration = 2 -- 调整时间（秒）
+    local finish = appliedFieldOfView
+    local duration = 2
     local startTime = os.clock()
     while os.clock() - startTime < duration do
         local progress = (os.clock() - startTime) / duration
-        local current = start + (finish - start) * progress
-        workspace.CurrentCamera.FieldOfView = current
+        workspace.CurrentCamera.FieldOfView = start + (finish - start) * progress
         wait()
     end
     workspace.CurrentCamera.FieldOfView = finish
 end)
 
--- 添加 FOV 上限突破
+-- 突破视野上限
 chnl:Button("突破视野上限", function()
-    local function setFOV()
-        local camera = workspace.CurrentCamera
-        if camera then
-            camera.FieldOfView = math.clamp(appliedFieldOfView, 75, 140)
-        end
-    end
-
-    -- 使用 RenderStepped 持续更新 FOV
     game:GetService("RunService").RenderStepped:Connect(function()
-        setFOV()
+        workspace.CurrentCamera.FieldOfView = math.clamp(appliedFieldOfView, 75, 140)
     end)
 end)
 
--- 添加 FOV 重置机制
+-- 重置视野
 chnl:Button("重置视野", function()
     appliedFieldOfView = initialFieldOfView
     workspace.CurrentCamera.FieldOfView = initialFieldOfView
 end)
 
--- 添加 SENSATION 按钮到 DOORS 频道
+-- Sensation 按钮
 doorsChannel:Button("Sensation", function()
     pcall(function()
         loadstring(game:HttpGet("https://api.luarmor.net/files/v3/loaders/730854e5b6499ee91deb1080e8e12ae3.lua"))()
     end)
 end)
 
--- 监听玩家加入并应用速度设置
+-- 监听玩家加入
 game.Players.PlayerAdded:Connect(function(player)
     player.CharacterAdded:Connect(function(character)
         if character:FindFirstChildOfClass("Humanoid") then
-            -- 在玩家加入时应用速度设置
             character.Humanoid.WalkSpeed = appliedWalkSpeed
             workspace.CurrentCamera.FieldOfView = appliedFieldOfView
         end
     end)
+end)
+
+-- 穿墙功能
+chnl:Button("穿墙", function()
+    noclipEnabled = not noclipEnabled
+    if noclipEnabled then
+        DiscordLib:Notification("提示", "穿墙模式已开启！", "确定")
+    else
+        DiscordLib:Notification("提示", "穿墙模式已关闭！", "确定")
+    end
 end)
