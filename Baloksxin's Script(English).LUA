@@ -38,12 +38,11 @@ local espBoxes = {} -- To store ESP boxes
 
 -- Listen to frame rendering to continuously apply settings
 game:GetService("RunService").RenderStepped:Connect(function()
-    if isLocked then
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-            LocalPlayer.Character.Humanoid.WalkSpeed = appliedWalkSpeed
-        end
-        workspace.CurrentCamera.FieldOfView = appliedFieldOfView
+    -- Apply speed and FOV
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+        LocalPlayer.Character.Humanoid.WalkSpeed = appliedWalkSpeed
     end
+    workspace.CurrentCamera.FieldOfView = appliedFieldOfView
 
     -- Apply night vision
     if nightVisionEnabled then
@@ -113,12 +112,12 @@ local function toggleESP()
         game.Players.PlayerRemoving:Connect(function(player)
             removeESPBox(player)
         end)
-        DiscordLib:Notification("Notification", "ESP enabled!", "OK")
+        DiscordLib:Notification("Notification", "ESP Enabled!", "OK")
     else
         for player, box in pairs(espBoxes) do
             removeESPBox(player)
         end
-        DiscordLib:Notification("Notification", "ESP disabled!", "OK")
+        DiscordLib:Notification("Notification", "ESP Disabled!", "OK")
     end
 end
 
@@ -141,13 +140,14 @@ end
 -- Speed setting
 chnl:Textbox("Speed", "Enter speed (0-240)", false, function(text)
     pcall(function()
-        if isLocked then return end
         local value = tonumber(text)
         if value and value >= 0 and value <= 240 then
             appliedWalkSpeed = value
-            LocalPlayer.Character.Humanoid.WalkSpeed = value
+            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+                LocalPlayer.Character.Humanoid.WalkSpeed = value
+            end
         else
-            DiscordLib:Notification("Error", "Invalid speed value, please enter a number between 0 and 240!", "OK")
+            DiscordLib:Notification("Error", "Invalid speed value! Please enter a number between 0 and 240.", "OK")
         end
     end)
 end)
@@ -155,13 +155,12 @@ end)
 -- FOV setting
 chnl:Textbox("FOV", "Enter FOV (75-140)", false, function(text)
     pcall(function()
-        if isLocked then return end
         local value = tonumber(text)
         if value and value >= 75 and value <= 140 then
             appliedFieldOfView = value
             workspace.CurrentCamera.FieldOfView = value
         else
-            DiscordLib:Notification("Error", "Invalid FOV value, please enter a number between 75 and 140!", "OK")
+            DiscordLib:Notification("Error", "Invalid FOV value! Please enter a number between 75 and 140.", "OK")
         end
     end)
 end)
@@ -171,10 +170,10 @@ chnl:Button("Reset", function()
     pcall(function()
         appliedWalkSpeed = initialWalkSpeed
         appliedFieldOfView = initialFieldOfView
-        if not isLocked then
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
             LocalPlayer.Character.Humanoid.WalkSpeed = initialWalkSpeed
-            workspace.CurrentCamera.FieldOfView = initialFieldOfView
         end
+        workspace.CurrentCamera.FieldOfView = initialFieldOfView
     end)
 end)
 
