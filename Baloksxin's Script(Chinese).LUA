@@ -38,12 +38,11 @@ local espBoxes = {} -- 用于存储 ESP 框
 
 -- 监听帧渲染，持续应用设置
 game:GetService("RunService").RenderStepped:Connect(function()
-    if isLocked then
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-            LocalPlayer.Character.Humanoid.WalkSpeed = appliedWalkSpeed
-        end
-        workspace.CurrentCamera.FieldOfView = appliedFieldOfView
+    -- 应用速度和 FOV
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+        LocalPlayer.Character.Humanoid.WalkSpeed = appliedWalkSpeed
     end
+    workspace.CurrentCamera.FieldOfView = appliedFieldOfView
 
     -- 应用夜视
     if nightVisionEnabled then
@@ -141,11 +140,12 @@ end
 -- 速度设置
 chnl:Textbox("速度", "请输入速度（0-240）", false, function(text)
     pcall(function()
-        if isLocked then return end
         local value = tonumber(text)
         if value and value >= 0 and value <= 240 then
             appliedWalkSpeed = value
-            LocalPlayer.Character.Humanoid.WalkSpeed = value
+            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+                LocalPlayer.Character.Humanoid.WalkSpeed = value
+            end
         else
             DiscordLib:Notification("错误", "速度值无效，请输入 0 到 240 之间的数字！", "确定")
         end
@@ -155,7 +155,6 @@ end)
 -- 视野（FOV）设置
 chnl:Textbox("视野（FOV）", "请输入视野（75-140）", false, function(text)
     pcall(function()
-        if isLocked then return end
         local value = tonumber(text)
         if value and value >= 75 and value <= 140 then
             appliedFieldOfView = value
@@ -171,10 +170,10 @@ chnl:Button("重置", function()
     pcall(function()
         appliedWalkSpeed = initialWalkSpeed
         appliedFieldOfView = initialFieldOfView
-        if not isLocked then
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
             LocalPlayer.Character.Humanoid.WalkSpeed = initialWalkSpeed
-            workspace.CurrentCamera.FieldOfView = initialFieldOfView
         end
+        workspace.CurrentCamera.FieldOfView = initialFieldOfView
     end)
 end)
 
