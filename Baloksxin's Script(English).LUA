@@ -19,7 +19,7 @@ local doorsChannel = srv:Channel("DOORS")
 -- Get local player
 local LocalPlayer = game.Players.LocalPlayer
 
--- Record initial speed and FOV
+-- Record initial walk speed and FOV
 local initialWalkSpeed = 16
 local initialFieldOfView = 75
 LocalPlayer.CharacterAdded:Connect(function(character)
@@ -27,18 +27,16 @@ LocalPlayer.CharacterAdded:Connect(function(character)
     initialFieldOfView = workspace.CurrentCamera.FieldOfView
 end)
 
--- Variables to store states
+-- Variable to store states
 local isLocked = false
 local appliedWalkSpeed = initialWalkSpeed
 local appliedFieldOfView = initialFieldOfView
 local noclipEnabled = false
 local nightVisionEnabled = false
-local espEnabled = false
-local espBoxes = {} -- To store ESP boxes
 
--- Listen to frame rendering to continuously apply settings
+-- Listen for frame rendering to continuously apply settings
 game:GetService("RunService").RenderStepped:Connect(function()
-    -- Apply speed and FOV
+    -- Apply walk speed and FOV
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
         LocalPlayer.Character.Humanoid.WalkSpeed = appliedWalkSpeed
     end
@@ -58,84 +56,7 @@ game:GetService("RunService").RenderStepped:Connect(function()
             end
         end
     end
-
-    -- Update ESP boxes
-    if espEnabled then
-        for player, box in pairs(espBoxes) do
-            if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                box.Adornee = player.Character.HumanoidRootPart
-            else
-                box:Destroy()
-                espBoxes[player] = nil
-            end
-        end
-    end
 end)
-
--- Create ESP box
-local function createESPBox(player)
-    local box = Instance.new("BoxHandleAdornment")
-    box.Size = Vector3.new(2, 4, 2)
-    box.Adornee = player.Character:FindFirstChild("HumanoidRootPart")
-    box.AlwaysOnTop = true
-    box.ZIndex = 10
-    box.Transparency = 0.5
-    box.Color3 = Color3.new(1, 0, 0) -- Red box
-    box.Parent = player.Character
-    espBoxes[player] = box
-end
-
--- Remove ESP box
-local function removeESPBox(player)
-    if espBoxes[player] then
-        espBoxes[player]:Destroy()
-        espBoxes[player] = nil
-    end
-end
-
--- Toggle ESP
-local function toggleESP()
-    espEnabled = not espEnabled
-    if espEnabled then
-        for _, player in ipairs(game.Players:GetPlayers()) do
-            if player ~= LocalPlayer and player.Character then
-                createESPBox(player)
-            end
-        end
-        game.Players.PlayerAdded:Connect(function(player)
-            player.CharacterAdded:Connect(function()
-                if espEnabled then
-                    createESPBox(player)
-                end
-            end)
-        end)
-        game.Players.PlayerRemoving:Connect(function(player)
-            removeESPBox(player)
-        end)
-        DiscordLib:Notification("Notification", "ESP Enabled!", "OK")
-    else
-        for player, box in pairs(espBoxes) do
-            removeESPBox(player)
-        end
-        DiscordLib:Notification("Notification", "ESP Disabled!", "OK")
-    end
-end
-
--- Highlight interactables (e.g., doors, buttons)
-local function highlightInteractables()
-    for _, obj in ipairs(workspace:GetDescendants()) do
-        if obj:IsA("BasePart") and (obj.Name == "Door" or obj.Name == "Button") then
-            local highlight = Instance.new("BoxHandleAdornment")
-            highlight.Size = obj.Size
-            highlight.Adornee = obj
-            highlight.AlwaysOnTop = true
-            highlight.ZIndex = 10
-            highlight.Transparency = 0.5
-            highlight.Color3 = Color3.new(0, 1, 0) -- Green box
-            highlight.Parent = obj
-        end
-    end
-end
 
 -- Speed setting
 chnl:Textbox("Speed", "Enter speed (0-240)", false, function(text)
@@ -147,20 +68,20 @@ chnl:Textbox("Speed", "Enter speed (0-240)", false, function(text)
                 LocalPlayer.Character.Humanoid.WalkSpeed = value
             end
         else
-            DiscordLib:Notification("Error", "Invalid speed value! Please enter a number between 0 and 240.", "OK")
+            DiscordLib:Notification("Error", "Invalid speed value. Please enter a number between 0 and 240!", "OK")
         end
     end)
 end)
 
--- FOV setting
-chnl:Textbox("FOV", "Enter FOV (75-140)", false, function(text)
+-- Field of View (FOV) setting
+chnl:Textbox("Field of View (FOV)", "Enter FOV (75-140)", false, function(text)
     pcall(function()
         local value = tonumber(text)
         if value and value >= 75 and value <= 140 then
             appliedFieldOfView = value
             workspace.CurrentCamera.FieldOfView = value
         else
-            DiscordLib:Notification("Error", "Invalid FOV value! Please enter a number between 75 and 140.", "OK")
+            DiscordLib:Notification("Error", "Invalid FOV value. Please enter a number between 75 and 140!", "OK")
         end
     end)
 end)
@@ -178,11 +99,11 @@ chnl:Button("Reset", function()
 end)
 
 -- Night vision mode
-chnl:Button("Night Vision", function()
+chnl:Button("Night Vision Mode", function()
     nightVisionEnabled = not nightVisionEnabled
     if not nightVisionEnabled then
         game.Lighting.Ambient = Color3.new(0.5, 0.5, 0.5) -- Restore default ambient light
-        game.Lighting.FogEnd = 1000 -- Restore default fog
+        game.Lighting.FogEnd = 1000 -- Restore default fog effect
     end
 end)
 
@@ -190,9 +111,9 @@ end)
 chnl:Button("Lock Speed/FOV", function()
     isLocked = not isLocked
     if isLocked then
-        DiscordLib:Notification("Notification", "Speed and FOV locked!", "OK")
+        DiscordLib:Notification("Notice", "Speed and FOV are locked and cannot be modified!", "OK")
     else
-        DiscordLib:Notification("Notification", "Speed and FOV unlocked!", "OK")
+        DiscordLib:Notification("Notice", "Speed and FOV are unlocked and can be modified!", "OK")
     end
 end)
 
@@ -241,19 +162,8 @@ end)
 chnl:Button("Noclip", function()
     noclipEnabled = not noclipEnabled
     if noclipEnabled then
-        DiscordLib:Notification("Notification", "Noclip enabled!", "OK")
+        DiscordLib:Notification("Notice", "Noclip mode is now enabled!", "OK")
     else
-        DiscordLib:Notification("Notification", "Noclip disabled!", "OK")
+        DiscordLib:Notification("Notice", "Noclip mode is now disabled!", "OK")
     end
-end)
-
--- ESP for players
-chnl:Button("Player ESP", function()
-    toggleESP()
-end)
-
--- Highlight interactables
-chnl:Button("Interactable ESP", function()
-    highlightInteractables()
-    DiscordLib:Notification("Notification", "Interactables highlighted!", "OK")
 end)
