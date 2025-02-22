@@ -13,7 +13,7 @@ local chnl = srv:Channel("主频道")
 -- 创建压力频道
 local pressureChannel = srv:Channel("压力")
 
--- 创建DOORS频道
+-- 创建 DOORS 频道
 local doorsChannel = srv:Channel("DOORS")
 
 -- 获取本地玩家
@@ -33,6 +33,8 @@ local appliedWalkSpeed = initialWalkSpeed
 local appliedFieldOfView = initialFieldOfView
 local noclipEnabled = false
 local nightVisionEnabled = false
+local espEnabled = false
+local espBoxes = {} -- 用于存储 ESP 框
 
 -- 监听帧渲染，持续应用设置
 game:GetService("RunService").RenderStepped:Connect(function()
@@ -57,7 +59,84 @@ game:GetService("RunService").RenderStepped:Connect(function()
             end
         end
     end
+
+    -- 更新 ESP 框
+    if espEnabled then
+        for player, box in pairs(espBoxes) do
+            if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                box.Adornee = player.Character.HumanoidRootPart
+            else
+                box:Destroy()
+                espBoxes[player] = nil
+            end
+        end
+    end
 end)
+
+-- 创建 ESP 框
+local function createESPBox(player)
+    local box = Instance.new("BoxHandleAdornment")
+    box.Size = Vector3.new(2, 4, 2)
+    box.Adornee = player.Character:FindFirstChild("HumanoidRootPart")
+    box.AlwaysOnTop = true
+    box.ZIndex = 10
+    box.Transparency = 0.5
+    box.Color3 = Color3.new(1, 0, 0) -- 红色框
+    box.Parent = player.Character
+    espBoxes[player] = box
+end
+
+-- 移除 ESP 框
+local function removeESPBox(player)
+    if espBoxes[player] then
+        espBoxes[player]:Destroy()
+        espBoxes[player] = nil
+    end
+end
+
+-- 启用/禁用 ESP
+local function toggleESP()
+    espEnabled = not espEnabled
+    if espEnabled then
+        for _, player in ipairs(game.Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character then
+                createESPBox(player)
+            end
+        end
+        game.Players.PlayerAdded:Connect(function(player)
+            player.CharacterAdded:Connect(function()
+                if espEnabled then
+                    createESPBox(player)
+                end
+            end)
+        end)
+        game.Players.PlayerRemoving:Connect(function(player)
+            removeESPBox(player)
+        end)
+        DiscordLib:Notification("提示", "ESP 已开启！", "确定")
+    else
+        for player, box in pairs(espBoxes) do
+            removeESPBox(player)
+        end
+        DiscordLib:Notification("提示", "ESP 已关闭！", "确定")
+    end
+end
+
+-- 透视互动对象（如门、按钮等）
+local function highlightInteractables()
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("BasePart") and (obj.Name == "Door" or obj.Name == "Button") then
+            local highlight = Instance.new("BoxHandleAdornment")
+            highlight.Size = obj.Size
+            highlight.Adornee = obj
+            highlight.AlwaysOnTop = true
+            highlight.ZIndex = 10
+            highlight.Transparency = 0.5
+            highlight.Color3 = Color3.new(0, 1, 0) -- 绿色框
+            highlight.Parent = obj
+        end
+    end
+end
 
 -- 速度设置
 chnl:Textbox("速度", "请输入速度（0-240）", false, function(text)
@@ -118,8 +197,8 @@ chnl:Button("锁定速度/视野", function()
     end
 end)
 
--- 压力ESP脚本
-pressureChannel:Button("加载压力ESP脚本", function()
+-- 压力 ESP 脚本
+pressureChannel:Button("加载压力 ESP 脚本", function()
     pcall(function()
         loadstring(game:HttpGet("https://pastebin.com/raw/haa09YfF"))()
     end)
@@ -159,16 +238,6 @@ doorsChannel:Button("Sensation", function()
     end)
 end)
 
--- 监听玩家加入
-game.Players.PlayerAdded:Connect(function(player)
-    player.CharacterAdded:Connect(function(character)
-        if character:FindFirstChildOfClass("Humanoid") then
-            character.Humanoid.WalkSpeed = appliedWalkSpeed
-            workspace.CurrentCamera.FieldOfView = appliedFieldOfView
-        end
-    end)
-end)
-
 -- 穿墙功能
 chnl:Button("穿墙", function()
     noclipEnabled = not noclipEnabled
@@ -177,4 +246,15 @@ chnl:Button("穿墙", function()
     else
         DiscordLib:Notification("提示", "穿墙模式已关闭！", "确定")
     end
+end)
+
+-- ESP 透视玩家
+chnl:Button("ESP (透视玩家)", function()
+    toggleESP()
+end)
+
+-- 透视互动对象
+chnl:Button("透视互动对象", function()
+    highlightInteractables()
+    DiscordLib:Notification("提示", "互动对象已高亮显示！", "确定")
 end)
