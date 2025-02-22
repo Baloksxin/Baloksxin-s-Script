@@ -249,12 +249,12 @@ chnl:Button("穿墙", function()
 end)
 
 -- ESP 透视玩家
-chnl:Button("ESP (透视玩家)", function()
+chnl:Button("玩家ESP", function()
     toggleESP()
 end)
 
 -- 透视互动对象
-chnl:Button("透视互动对象", function()
+chnl:Button("互动ESP", function()
     highlightInteractables()
     DiscordLib:Notification("提示", "互动对象已高亮显示！", "确定")
 end)
